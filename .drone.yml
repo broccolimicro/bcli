@@ -6,8 +6,8 @@ steps:
 - name: build
   image: docker:latest
   commands:
-	- mkdir .secret
-	- echo "$USER" > .secret/user
-	- echo "$TOKEN" > .secret/token
+  - mkdir .secret
+  - echo "$USER" > .secret/user
+  - echo "$TOKEN" > .secret/token
   - DOCKER_BUILDKIT=1 docker build . --secret id=user,src=.secret/user --secret id=token,src=.secret/token
-	- rm -rf .secret
+  - rm -rf .secret
