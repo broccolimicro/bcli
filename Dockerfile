@@ -71,7 +71,10 @@ RUN make
 RUN cp prdbase prspice /opt/cad/bin
 
 # install ACT-06
-#WORKDIR /toolsrc
-#RUN git clone https://github.com/nbingham1/act-06.git
-#WORKDIR act-06
-#RUN make
+ARG USER
+ARG TOKEN
+
+WORKDIR /toolsrc
+RUN git clone https://$USER:$TOKEN@git.broccolimicro.io/Broccoli/act-06.git
+WORKDIR act-06
+RUN make
