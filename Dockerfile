@@ -1,4 +1,6 @@
-from ubuntu:latest
+# syntax = docker/dockerfile:1.0-experimental
+
+FROM ubuntu:latest
 
 RUN apt-get update
 
@@ -71,10 +73,9 @@ RUN make
 RUN cp prdbase prspice /opt/cad/bin
 
 # install ACT-06
-ARG USER
-ARG TOKEN
-
+RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
 WORKDIR /toolsrc
-RUN git clone https://$USER:$TOKEN@git.broccolimicro.io/Broccoli/act-06.git
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
 WORKDIR act-06
 RUN make
+
