@@ -77,5 +77,14 @@ RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
 WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
 WORKDIR act-06
-RUN make
+RUN XYCE_INSTALL="/usr/local" make
+RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
+
+# TODO(edward.bingham) install gaw
+
+# TODO(edward.bingham) setup vnc
+
+# TODO(edward.bingham) setup mounted source folder
+
+# TODO(edward.bingham) setup network mounted tech folder
 
