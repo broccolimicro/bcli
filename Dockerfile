@@ -80,11 +80,61 @@ WORKDIR act-06
 RUN XYCE_INSTALL="/usr/local" make
 RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
 
-# TODO(edward.bingham) install gaw
+# install pr
+WORKDIR /toolsrc
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git
+RUN cp pr/* /opt/cad/bin
+
+# install OpenRoad
+WORKDIR /toolsrc
+RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
+WORKDIR OpenROAD-flow-scripts
+
+# install gaw
+WORKDIR /toolsrc
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/waveview.git
+WORKDIR waveview
+RUN ./configure
+RUN make
+RUN cp src/gaw /opt/cad/bin
 
 # TODO(edward.bingham) setup vnc
 
-# TODO(edward.bingham) setup mounted source folder
-
 # TODO(edward.bingham) setup network mounted tech folder
 
+# install go
+WORKDIR /toolsrc
+RUN apt-get -y install wget
+RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
+RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
+
+# install python
+RUN apt-get install -y python3 pip
+
+# install editors
+RUN apt-get install -y vim
+
+# setup home directory template and install vim plugins
+WORKDIR "/"
+ADD home template
+RUN mkdir -p /template/.vim/pack/plugins/start
+RUN git clone https://github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
+RUN git clone https://tpope.io/vim/fugitive.git /template/.vim/pack/plugins/start/fugitive
+RUN git clone https://github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
+
+# Clean up source code folder
+RUN rm -rf /toolsrc
+
+# Connect user home directory of host machine
+RUN mkdir "/host"
+WORKDIR "/host"
+
+ENV USER "bcli"
+ENV USER_ID "1000" 
+ENV GROUP_ID "1000"
+
+CMD exec /bin/bash -c "/usr/sbin/groupadd -g $GROUP_ID $USER; \
+  /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
+  cp -r /template /home/$USER; \
+  chown -R $USER:$USER /home/$USER; \
+  trap : TERM INT; sleep infinity & wait"

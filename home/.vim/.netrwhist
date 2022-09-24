@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =7
+let g:netrw_dirhist_7='/home/nbingham/workspace/support/gcc/INSTALL'
+let g:netrw_dirhist_6='/home/nbingham/workspace/src/haystack/lib/parse'
+let g:netrw_dirhist_5='/home/nbingham/workspace/siden/content-seeder/internal/app/service/seeder/mocks'
+let g:netrw_dirhist_4='/home/nbingham'
+let g:netrw_dirhist_3='/home/nbingham/.ssh'
+let g:netrw_dirhist_2='/home/nbingham/workspace/vlsi/act/build'
+let g:netrw_dirhist_1='/home/nbingham/backup/act_conf/st28'

@@ -9,5 +9,5 @@ steps:
   - mkdir .secret
   - echo "$USER" > .secret/user
   - echo "$TOKEN" > .secret/token
-  - DOCKER_BUILDKIT=1 docker build . --secret id=user,src=.secret/user --secret id=token,src=.secret/token
+  - make
   - rm -rf .secret
