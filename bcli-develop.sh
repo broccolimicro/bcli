@@ -6,10 +6,20 @@ bcli() {
 		docker stop bcli-develop > /dev/null
 		echo "bcli-develop stopped"
 	elif [ "$1" = "mount" ]; then
-		mkdir -p $HOME/tech
-		sshfs $BROCCOLI_USER@broccolimicro.io:/opt/tech $HOME/tech/
+		if [ -z "$BROCCOLI_USER" ]; then
+			echo "Please set the BROCCOLI_USER environment variable for ssh access."
+		else
+			mkdir -p $HOME/tech
+			sshfs $BROCCOLI_USER@broccolimicro.io:/opt/tech $HOME/tech/
+		fi
 	elif [ "$1" = "unmount" ]; then
-		umount $HOME/tech
+		shift
+		if [ "$1" = "-f" ]; then
+			pkill -KILL sshfs
+			fusermount -u $HOME/tech
+		else
+			umount $HOME/tech
+		fi
 		rmdir $HOME/tech
 	else 
 		docker exec -u $(id -u):$(id -g) -it bcli-develop /bin/bash
