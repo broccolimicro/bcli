@@ -5,6 +5,12 @@ Setup the broccoli command line interface with the following command.
 source bcli-develop.sh
 ```
 
+Set up your ssh connection to the technology node server, it is preferrable to set up an ssh key.
+```
+export BROCCOLI_USER="nbingham"
+bcli mount
+```
+
 Download the developement environment and boot it up in docker
 ```
 bcli up
@@ -30,7 +36,8 @@ Finally, vim is fully set up for both golang and act
 vim file.act
 ```
 
-When you are done, you can shut down the development environment.
+When you are done, you can shut down the development environment and disconnect the technology server.
 ```
 bcli down
+bcli unmount
 ```
