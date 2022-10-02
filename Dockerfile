@@ -74,11 +74,12 @@ RUN cp hsesim/hsesim /opt/cad/bin
 RUN cp hseenc/hseenc /opt/cad/bin
 
 # install ACT-06
+RUN echo "hello"
 RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
 WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
 WORKDIR act-06
-RUN XYCE_INSTALL="/usr/local" make
+RUN XYCE_INSTALL="/usr/local" ENABLE_MPI=1 make
 RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
 
 # install go
@@ -122,6 +123,7 @@ RUN make install
 
 # install prspice
 WORKDIR /toolsrc
+RUN echo "hello"
 RUN git clone https://github.com/nbingham1/prspice.git
 WORKDIR prspice
 RUN git checkout xyce
