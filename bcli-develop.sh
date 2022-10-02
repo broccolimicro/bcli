@@ -21,7 +21,20 @@ bcli() {
 			umount $HOME/tech
 		fi
 		rmdir $HOME/tech
-	else 
+	elif [ "$#" -eq 0 ]; then 
 		docker exec -u $(id -u):$(id -g) -it bcli-develop /bin/bash
+	else
+		if [ "$1" != "--help" ]; then
+			echo "error: unrecognized command '$1'"
+			echo ""
+		fi
+
+		echo "usage: bcli <command>"
+		echo "If command is empty, then start a terminal logged into the toolset."
+		echo "  up      - launch the toolset"
+		echo "  down    - shutdown the toolset"
+		echo "  mount   - mount the technology files from broccolimicro.io"
+		echo "  unmount - unmount the technology files"
+		echo "    -f    - force the unmount if the connection has been broken"
 	fi 
 }
