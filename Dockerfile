@@ -26,27 +26,38 @@ RUN apt-get install -y autoconf automake git
 # parallel dependencies
 RUN apt-get install -y libhwloc15 libopenmpi-dev openmpi-bin openmpi-common
 
-RUN git clone https://github.com/trilinos/Trilinos.git
+RUN apt-get install -y bison
+RUN git clone --shallow-since 2022-09-15 --branch develop https://github.com/trilinos/Trilinos.git
+RUN git clone https://github.com/Xyce/Xyce.git
+
 WORKDIR Trilinos
-RUN git checkout tags/trilinos-release-12-12-1
+RUN git checkout b91cc3dcd9
 RUN mkdir build
 RUN mkdir /opt/trilinos
 WORKDIR build
-ADD trilinos/reconfigure .
-RUN ./reconfigure
-RUN make
-RUN make install
+RUN cmake \
+  -D CMAKE_C_COMPILER=mpicc \
+  -D CMAKE_CXX_COMPILER=mpic++ \
+  -D CMAKE_Fortran_COMPILER=mpif77 \
+  -D CMAKE_INSTALL_PREFIX="/opt/trilinos" \
+  -D TPL_AMD_INCLUDE_DIRS="/usr/include/suitesparse" \
+  -D AMD_LIBRARY_DIRS="/usr/lib" \
+  -D MPI_BASE_DIR="/usr" \
+  -C /toolsrc/Xyce/cmake/trilinos/trilinos-config-MPI.cmake \
+  /toolsrc/Trilinos
+RUN cmake --build . -j 16 -t install
 
 # install Xyce
 WORKDIR /toolsrc
-RUN apt-get install -y bison
-RUN git clone https://github.com/Xyce/Xyce.git
 WORKDIR Xyce
-RUN ./bootstrap
 RUN mkdir build
 WORKDIR build
-RUN ../configure ARCHDIR=/opt/trilinos --enable-mpi --disable-verbose_linear --disable-verbose_nonlinear --disable-verbose_time --enable-shared --enable-xyce-shareable CC=mpicc CXX=mpicxx F77=mpifort CXXFLAGS="-O1 -fno-inline -std=c++11 -I/usr/lib/x86_64-linux-gnu/openmpi/include"
-RUN make
+RUN cmake \
+  -D CMAKE_INSTALL_PREFIX=/opt/cad \
+  -D Trilinos_ROOT=/opt/trilinos \
+  /toolsrc/Xyce
+RUN cmake --build . -j 16 -t install
+RUN make xycecinterface
 RUN make install
 
 # install ACT
@@ -59,6 +70,27 @@ ENV VLSI_TOOLS_SRC=/toolsrc/act
 RUN ./configure $ACT_HOME 
 RUN ./build
 RUN make install
+
+# install actsim
+WORKDIR /toolsrc
+RUN git clone https://github.com/asyncvlsi/actsim.git
+WORKDIR actsim
+RUN ./configure
+WORKDIR ext
+RUN make all
+WORKDIR ..
+RUN ./grab_xyce.sh /toolsrc/Xyce/build
+RUN make CXX=mpic++ CC=mpicc install
+
+# install ACT-06
+RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
+WORKDIR /toolsrc
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
+WORKDIR act-06/prsim
+RUN ./grab_xyce.sh /toolsrc/Xyce/build
+WORKDIR ..
+RUN XYCE_INSTALL="/opt/cad" ENABLE_MPI=1 make
+RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
 
 # install Haystack
 WORKDIR /toolsrc
@@ -73,15 +105,6 @@ RUN cp hseplot/plot /opt/cad/bin
 RUN cp hsesim/hsesim /opt/cad/bin
 RUN cp hseenc/hseenc /opt/cad/bin
 
-# install ACT-06
-RUN echo "hello"
-RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
-WORKDIR /toolsrc
-RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
-WORKDIR act-06
-RUN XYCE_INSTALL="/usr/local" ENABLE_MPI=1 make
-RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
-
 # install go
 WORKDIR /toolsrc
 RUN apt-get -y install wget
@@ -89,7 +112,7 @@ RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
 RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
 
 # install python
-RUN apt-get install -y python3 pip
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y python3 pip
 
 # install editors
 WORKDIR "/"
@@ -123,7 +146,6 @@ RUN make install
 
 # install prspice
 WORKDIR /toolsrc
-RUN echo "hello"
 RUN git clone https://github.com/nbingham1/prspice.git
 WORKDIR prspice
 RUN git checkout xyce
