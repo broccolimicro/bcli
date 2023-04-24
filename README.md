@@ -1,5 +1,10 @@
 # Broccoli Development Environment
 
+Pull the docker image for the broccoli command line interface.
+```
+docker pull git.broccolimicro.io/broccoli/broccoli-cli:latest
+```
+
 Setup the broccoli command line interface with the following command.
 ```
 source bcli-develop.sh

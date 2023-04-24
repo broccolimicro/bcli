@@ -60,6 +60,51 @@ RUN cmake --build . -j 16 -t install
 RUN make xycecinterface
 RUN make install
 
+# install go
+WORKDIR /toolsrc
+RUN apt-get -y install wget
+RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
+RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
+
+# install python
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y python3 pip
+
+# install editors
+WORKDIR "/"
+ADD home template
+RUN apt-get install -y vim
+RUN mkdir -p /template/.vim/pack/plugins/start
+RUN git clone https://github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
+RUN git clone https://tpope.io/vim/fugitive.git /template/.vim/pack/plugins/start/fugitive
+RUN git clone https://github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
+RUN vim +GoInstallBinaries +qall
+
+# install gaw
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
+WORKDIR /toolsrc
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/waveview.git
+WORKDIR waveview
+RUN ./configure
+RUN make
+RUN make install
+
+# install gtkwave
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y gtkwave
+
+# install magic layout tool
+WORKDIR /toolsrc
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev
+RUN git clone https://github.com/RTimothyEdwards/magic.git
+WORKDIR magic
+RUN ./configure
+RUN make
+RUN make install
+
+# install OpenRoad
+#WORKDIR /toolsrc
+#RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
+#WORKDIR OpenROAD-flow-scripts
+
 # install ACT
 WORKDIR /toolsrc
 RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
@@ -105,45 +150,6 @@ RUN cp hseplot/plot /opt/cad/bin
 RUN cp hsesim/hsesim /opt/cad/bin
 RUN cp hseenc/hseenc /opt/cad/bin
 
-# install go
-WORKDIR /toolsrc
-RUN apt-get -y install wget
-RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
-RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
-
-# install python
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y python3 pip
-
-# install editors
-WORKDIR "/"
-ADD home template
-RUN apt-get install -y vim
-RUN mkdir -p /template/.vim/pack/plugins/start
-RUN git clone https://github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
-RUN git clone https://tpope.io/vim/fugitive.git /template/.vim/pack/plugins/start/fugitive
-RUN git clone https://github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
-
-# install gaw
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
-WORKDIR /toolsrc
-RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/waveview.git
-WORKDIR waveview
-RUN ./configure
-RUN make
-RUN make install
-
-# install gtkwave
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y gtkwave
-
-# install magic layout tool
-WORKDIR /toolsrc
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev
-RUN git clone https://github.com/RTimothyEdwards/magic.git
-WORKDIR magic
-RUN ./configure
-RUN make
-RUN make install
-
 # install prspice
 WORKDIR /toolsrc
 RUN git clone https://github.com/nbingham1/prspice.git
@@ -156,11 +162,6 @@ RUN cp prdbase prspice /opt/cad/bin
 WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git
 RUN cp pr/* /opt/cad/bin
-
-# install OpenRoad
-#WORKDIR /toolsrc
-#RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
-#WORKDIR OpenROAD-flow-scripts
 
 # Clean up source code folder
 #RUN rm -rf /toolsrc
