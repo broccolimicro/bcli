@@ -29,7 +29,6 @@ RUN apt-get install -y libhwloc15 libopenmpi-dev openmpi-bin openmpi-common
 RUN apt-get install -y bison
 RUN git clone --shallow-since 2022-09-15 --branch develop https://github.com/trilinos/Trilinos.git
 RUN git clone https://github.com/Xyce/Xyce.git --branch Release-7.6.0
-# RUN git clone https://github.com/Xyce/Xyce.git
 
 WORKDIR Trilinos
 RUN git checkout b91cc3dcd9
@@ -111,12 +110,9 @@ RUN pwd
 WORKDIR /toolsrc
 RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
 RUN git clone https://www.github.com/asyncvlsi/act.git
-#RUN git clone https://www.github.com/jpt4/act.git
 WORKDIR act
 ENV ACT_HOME=/opt/cad
 ENV VLSI_TOOLS_SRC=/toolsrc/act
-#ENV C_COMPILER_NAME=mpicc
-#ENV CXX_COMPILER_NAME=mpic++
 RUN ./configure $ACT_HOME CC=mpicc CXX=mpic++
 RUN ./build
 RUN make install
@@ -130,7 +126,6 @@ RUN ./grab_xyce.sh /toolsrc/Xyce/build
 #WORKDIR ext
 RUN ./build.sh
 #WORKDIR ..
-#RUN ./grab_xyce.sh /toolsrc/Xyce/build
 RUN make CXX=mpic++ CC=mpicc install
 
 # install ACT-06
