@@ -110,27 +110,25 @@ RUN make install
 RUN pwd
 WORKDIR /toolsrc
 RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
-#RUN git clone https://www.github.com/asyncvlsi/act.git
-RUN git clone https://www.github.com/jpt4/act.git
+RUN git clone https://www.github.com/asyncvlsi/act.git
+#RUN git clone https://www.github.com/jpt4/act.git
 WORKDIR act
 ENV ACT_HOME=/opt/cad
 ENV VLSI_TOOLS_SRC=/toolsrc/act
-ENV C_COMPILER_NAME=mpicc
-ENV CXX_COMPILER_NAME=mpic++
-RUN ./configure $ACT_HOME 
+#ENV C_COMPILER_NAME=mpicc
+#ENV CXX_COMPILER_NAME=mpic++
+RUN ./configure $ACT_HOME CC=mpicc CXX=mpic++
 RUN ./build
 RUN make install
 
 # install actsim
 WORKDIR /toolsrc
 RUN git clone https://github.com/asyncvlsi/actsim.git
-#RUN git clone https://github.com/jpt4/actsim.git
 WORKDIR actsim
 RUN ./configure
 RUN ./grab_xyce.sh /toolsrc/Xyce/build
 #WORKDIR ext
 RUN ./build.sh
-#RUN make all
 #WORKDIR ..
 #RUN ./grab_xyce.sh /toolsrc/Xyce/build
 RUN make CXX=mpic++ CC=mpicc install
