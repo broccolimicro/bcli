@@ -170,7 +170,7 @@ RUN cp -r pr/* /opt/cad/bin
 RUN mkdir "/host"
 WORKDIR "/host"
 RUN rm -rf /opt/cad/conf
-RUN ln -s "/host/tech" "/opt/cad/conf"
+RUN mkdir /opt/cad/conf
 
 ENV USER "bcli"
 ENV USER_ID "1000" 
