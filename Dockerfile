@@ -20,11 +20,13 @@ RUN make install
 # install Trilinos
 WORKDIR /toolsrc
 # basic dependencies
-RUN apt-get install -y gcc g++ gfortran make cmake flex libfl-dev libfftw3-dev libsuitesparse-dev libblas-dev liblapack-dev libtool python3
+RUN apt-get install -y gcc g++ gfortran make cmake flex libfl-dev libfftw3-dev libsuitesparse-dev libblas-dev liblapack-dev libtool
 # building from git repo dependencies
 RUN apt-get install -y autoconf automake git
 # parallel dependencies
 RUN apt-get install -y libhwloc15 libopenmpi-dev openmpi-bin openmpi-common
+# install python
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y python3 pip
 
 RUN apt-get install -y bison
 RUN git clone --shallow-since 2022-09-15 --branch develop https://github.com/trilinos/Trilinos.git
@@ -65,9 +67,6 @@ WORKDIR /toolsrc
 RUN apt-get -y install wget
 RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
 RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
-
-# install python
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y python3 pip
 
 # install editors
 WORKDIR "/"
@@ -140,7 +139,7 @@ RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py 
 
 # install Haystack
 WORKDIR /toolsrc
-RUN git clone https://github.com/nbingham1/haystack.git
+RUN git clone https://github.com/nbingham1/haystack.git --branch v0.0.0
 WORKDIR haystack
 RUN git submodule update --init --recursive
 WORKDIR lib
@@ -163,7 +162,6 @@ RUN cp prdbase prspice /opt/cad/bin
 WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git
 RUN cp -r pr/* /opt/cad/bin
-#RUN cp pr/* /opt/cad/bin
 
 # Clean up source code folder
 #RUN rm -rf /toolsrc
