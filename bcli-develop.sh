@@ -1,11 +1,11 @@
 bcli() {
     if [ "$1" = "up" ]; then
-	docker run --rm -d -v $HOME:/host -v "/opt/tech:/opt/cad/conf" --name "bcli-develop" -h "bcli-develop" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
-	#docker run --rm -d -v $HOME:/host -v "${BCLI_TECH:/opt/tech}:/opt/cad/conf" --name "bcli-develop" -h "bcli-develop" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
-	echo "bcli-develop started"
+	docker run --rm -d -v $HOME:/host -v "/opt/tech:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
+	#docker run --rm -d -v $HOME:/host -v "${BCLI_TECH:/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
+	echo "bcli-$USER started"
     elif [ "$1" = "down" ]; then
-	docker stop bcli-develop > /dev/null
-	echo "bcli-develop stopped"
+	docker stop "bcli-$USER" > /dev/null
+	echo "bcli-$USER stopped"
 	#legacy, or if server files change faster than a new download
     elif [ "$1" = "mount" ]; then
 	if [ -z "$BROCCOLI_USER" ]; then
@@ -24,7 +24,7 @@ bcli() {
 	fi
 	rmdir $HOME/tech
     elif [ "$#" -eq 0 ]; then 
-	docker exec -u $(id -u):$(id -g) -it bcli-develop /bin/bash
+	docker exec -u $(id -u):$(id -g) -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
 	    echo "error: unrecognized command '$1'"
