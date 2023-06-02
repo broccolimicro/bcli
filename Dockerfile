@@ -47,7 +47,7 @@ RUN cmake \
   -D MPI_BASE_DIR="/usr" \ 
   -C /toolsrc/Xyce/cmake/trilinos/trilinos-config-MPI.cmake \
     /toolsrc/Trilinos
-RUN cmake --build . -j 8 -t install
+RUN cmake --build . -j 40 -t install
 
 # install Xyce
 WORKDIR /toolsrc
@@ -175,9 +175,12 @@ RUN mkdir /opt/cad/conf
 ENV USER "bcli"
 ENV USER_ID "1000" 
 ENV GROUP_ID "1000"
+ENV MEMBERS ""
 
-CMD exec /bin/bash -c "/usr/sbin/groupadd -g $GROUP_ID $USER; \
+RUN echo "HELLO!?!?"
+CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
+  echo \"$MEMBERS\" | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
   cp -r /template /home/$USER; \
   chown -R $USER:$USER /home/$USER; \
   trap : TERM INT; sleep infinity & wait"
