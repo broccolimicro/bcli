@@ -180,16 +180,17 @@ ENV GROUP_ID "1000"
 ENV MEMBERS ""
 ENV XAUTH_TOKEN ""
 
-RUN echo "version: 1"
-CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
+RUN echo "version: 12"
+CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/[0-9]* \\(adm\|cdrom\|sudo\|dip\|plugdev\|lxd\|docker\|dialout\|sambashare\|lpadmin\\) \?//g' | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
-  echo \"$MEMBERS\" | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
+  echo \"$MEMBERS\" | sed 's/[0-9]* \\(adm\|cdrom\|sudo\|dip\|plugdev\|lxd\|docker\|dialout\|sambashare\\) \?//g' | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
   cp -r /template /home/$USER; \
-  xauth -f /home/$USER/.Xauthority add $XAUTH_TOKEN; \
+	echo \"$XAUTH_TOKEN\" | xargs -n 3 xauth -f /home/$USER/.Xauthority add; \
   chown -R $USER:$USER /home/$USER; \
   echo \"$USER ALL=NOPASSWD: /usr/bin/apt-get install *\" > /etc/sudoers.d/apt-get; \
   echo \"$USER ALL=NOPASSWD: /usr/bin/apt install *\" > /etc/sudoers.d/apt; \
   trap : TERM INT; sleep infinity & wait"
+
 
 # In case we need to add a password for sudo.
 # However, its possible for someone to break out of the docker container and
