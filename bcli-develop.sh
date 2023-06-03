@@ -25,7 +25,7 @@ bcli() {
 	fi
 	rmdir $HOME/tech
     elif [ "$#" -eq 0 ]; then 
-	docker exec -u $(id -u):$(id -g) -it "bcli-$USER" /bin/bash
+	docker exec -u $(id -u) -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
 	    echo "error: unrecognized command '$1'"

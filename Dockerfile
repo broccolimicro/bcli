@@ -177,7 +177,7 @@ ENV USER_ID "1000"
 ENV GROUP_ID "1000"
 ENV MEMBERS ""
 
-RUN echo "HELLO!?!?"
+RUN echo "HELLO!?!?1"
 CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
   echo \"$MEMBERS\" | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
