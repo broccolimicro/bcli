@@ -47,7 +47,7 @@ RUN cmake \
   -D MPI_BASE_DIR="/usr" \ 
   -C /toolsrc/Xyce/cmake/trilinos/trilinos-config-MPI.cmake \
     /toolsrc/Trilinos
-RUN cmake --build . -j 8 -t install
+RUN cmake --build . -j 40 -t install
 
 # install Xyce
 WORKDIR /toolsrc
@@ -67,16 +67,6 @@ WORKDIR /toolsrc
 RUN apt-get -y install wget
 RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
 RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
-
-# install editors
-WORKDIR "/"
-ADD home template
-RUN apt-get install -y vim
-RUN mkdir -p /template/.vim/pack/plugins/start
-RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
-RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
-RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
-RUN vim +GoInstallBinaries +qall
 
 # install gaw
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
@@ -163,6 +153,18 @@ WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git
 RUN cp -r pr/* /opt/cad/bin
 
+RUN apt-get -y install sudo
+
+# install editors
+WORKDIR "/"
+ADD home template
+RUN apt-get install -y vim
+RUN mkdir -p /template/.vim/pack/plugins/start
+RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
+RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
+RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
+RUN vim +GoInstallBinaries +qall
+
 # Clean up source code folder
 #RUN rm -rf /toolsrc
 
@@ -170,14 +172,28 @@ RUN cp -r pr/* /opt/cad/bin
 RUN mkdir "/host"
 WORKDIR "/host"
 RUN rm -rf /opt/cad/conf
-RUN ln -s "/host/tech" "/opt/cad/conf"
+RUN mkdir /opt/cad/conf
 
 ENV USER "bcli"
 ENV USER_ID "1000" 
 ENV GROUP_ID "1000"
+ENV MEMBERS ""
+ENV XAUTH_TOKEN ""
 
-CMD exec /bin/bash -c "/usr/sbin/groupadd -g $GROUP_ID $USER; \
+RUN echo "version: 12"
+CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/[0-9]* \\(adm\|cdrom\|sudo\|dip\|plugdev\|lxd\|docker\|dialout\|sambashare\|lpadmin\\) \?//g' | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
+  echo \"$MEMBERS\" | sed 's/[0-9]* \\(adm\|cdrom\|sudo\|dip\|plugdev\|lxd\|docker\|dialout\|sambashare\\) \?//g' | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
   cp -r /template /home/$USER; \
+	echo \"$XAUTH_TOKEN\" | xargs -n 3 xauth -f /home/$USER/.Xauthority add; \
   chown -R $USER:$USER /home/$USER; \
+  echo \"$USER ALL=NOPASSWD: /usr/bin/apt-get install *\" > /etc/sudoers.d/apt-get; \
+  echo \"$USER ALL=NOPASSWD: /usr/bin/apt install *\" > /etc/sudoers.d/apt; \
   trap : TERM INT; sleep infinity & wait"
+
+
+# In case we need to add a password for sudo.
+# However, its possible for someone to break out of the docker container and
+# have root access on the host if they are given sudo access in the container.
+# So, we really shouldn't give them sudo access
+# /usr/sbin/usermod -p \$(openssl passwd -1 'bcli') $USER; \ 

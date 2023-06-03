@@ -1,11 +1,13 @@
 bcli() {
     if [ "$1" = "up" ]; then
-	docker run --rm -d -v $HOME:/host --name "bcli-develop" -h "bcli-develop" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
-	#docker run --rm -d -v $HOME:/host --name "bcli-develop" -h "bcli-develop" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
-	echo "bcli-develop started"
+	XAUTH_TOKEN="$(xauth list | sed 's/^[^:]*/localhost/g' | sed 's/localhost: /localhost:0 /g')"
+	MEMBERS="$(groups | sed 's/ /\n/g' | xargs -I{} getent group {} | sed 's/\([^:]*\):[^:]*:\([^:]*\):.*/\2 \1/g')"
+	docker run --rm -d --net=host -v $HOME:/host -v "${BCLI_TECH:-/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -e MEMBERS="$MEMBERS" -e XAUTH_TOKEN="$XAUTH_TOKEN" -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
+	#docker run --rm -d -v $HOME:/host -v "${BCLI_TECH:/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
+	echo "bcli-$USER started"
     elif [ "$1" = "down" ]; then
-	docker stop bcli-develop > /dev/null
-	echo "bcli-develop stopped"
+	docker stop "bcli-$USER" > /dev/null
+	echo "bcli-$USER stopped"
 	#legacy, or if server files change faster than a new download
     elif [ "$1" = "mount" ]; then
 	if [ -z "$BROCCOLI_USER" ]; then
@@ -23,8 +25,12 @@ bcli() {
 	    umount $HOME/tech
 	fi
 	rmdir $HOME/tech
-    elif [ "$#" -eq 0 ]; then 
-	docker exec -u $(id -u):$(id -g) -it bcli-develop /bin/bash
+    elif [ "$#" -eq 0 ]; then
+	WD="/host"
+	if [[ "$PWD" = "$HOME/"* ]]; then
+		WD="/host${PWD#$HOME}"
+	fi
+	docker exec -u $(id -u) -w $WD -e DISPLAY=$DISPLAY -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
 	    echo "error: unrecognized command '$1'"
