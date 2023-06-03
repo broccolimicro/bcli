@@ -68,16 +68,6 @@ RUN apt-get -y install wget
 RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
 RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
 
-# install editors
-WORKDIR "/"
-ADD home template
-RUN apt-get install -y vim
-RUN mkdir -p /template/.vim/pack/plugins/start
-RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
-RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
-RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
-RUN vim +GoInstallBinaries +qall
-
 # install gaw
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
 WORKDIR /toolsrc
@@ -163,6 +153,18 @@ WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git
 RUN cp -r pr/* /opt/cad/bin
 
+RUN apt-get -y install sudo
+
+# install editors
+WORKDIR "/"
+ADD home template
+RUN apt-get install -y vim
+RUN mkdir -p /template/.vim/pack/plugins/start
+RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
+RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
+RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
+RUN vim +GoInstallBinaries +qall
+
 # Clean up source code folder
 #RUN rm -rf /toolsrc
 
@@ -176,11 +178,13 @@ ENV USER "bcli"
 ENV USER_ID "1000" 
 ENV GROUP_ID "1000"
 ENV MEMBERS ""
+ENV XAUTH_TOKEN ""
 
-RUN echo "HELLO!?!?1"
 CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
   echo \"$MEMBERS\" | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
   cp -r /template /home/$USER; \
+  xauth -f /home/$USER/.Xauthority add $XAUTH_TOKEN; \
   chown -R $USER:$USER /home/$USER; \
+  /usr/sbin/usermod -p \$(openssl passwd -1 'bcli') $USER; \ 
   trap : TERM INT; sleep infinity & wait"

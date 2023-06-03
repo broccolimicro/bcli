@@ -1,7 +1,7 @@
 bcli() {
     if [ "$1" = "up" ]; then
 	export MEMBERS="$(groups | sed 's/ /\n/g' | xargs -I{} getent group {} | sed 's/\([^:]*\):[^:]*:\([^:]*\):.*/\2 \1/g')"
-	docker run --rm -d -v $HOME:/host -v "/opt/tech:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -e MEMBERS="$MEMBERS" -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
+	docker run --rm -d --net=host -v $HOME:/host -v "/opt/tech:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -e MEMBERS="$MEMBERS" -e XAUTH_TOKEN="$(xauth list | sed 's/^[^:]*/localhost/g')" -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
 	#docker run --rm -d -v $HOME:/host -v "${BCLI_TECH:/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
 	echo "bcli-$USER started"
     elif [ "$1" = "down" ]; then
@@ -29,7 +29,7 @@ bcli() {
 	if [[ "$PWD" = "$HOME/"* ]]; then
 		WD="/host${PWD#$HOME}"
 	fi
-	docker exec -u $(id -u) -w $WD -it "bcli-$USER" /bin/bash
+	docker exec -u $(id -u) -w $WD -e DISPLAY=$DISPLAY -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
 	    echo "error: unrecognized command '$1'"
