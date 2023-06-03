@@ -1,8 +1,7 @@
 bcli() {
     if [ "$1" = "up" ]; then
-	XAUTH_TOKEN="$(xauth list | sed 's/^[^:]*/localhost/g' | sed 's/localhost: /localhost:0 /g')"
 	MEMBERS="$(groups | sed 's/ /\n/g' | xargs -I{} getent group {} | sed 's/\([^:]*\):[^:]*:\([^:]*\):.*/\2 \1/g')"
-	docker run --rm -d --net=host -v $HOME:/host -v "${BCLI_TECH:-/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -e MEMBERS="$MEMBERS" -e XAUTH_TOKEN="$XAUTH_TOKEN" -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
+	docker run --rm -d --net=host -v $HOME:/host -v "${BCLI_TECH:-/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -e MEMBERS="$MEMBERS" -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" public.ecr.aws/l5h5o6z4/broccoli-cli:latest > /dev/null
 	#docker run --rm -d -v $HOME:/host -v "${BCLI_TECH:/opt/tech}:/opt/cad/conf" --name "bcli-$USER" -h "bcli-$USER" -e USER=$USER -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -e DISPLAY=$DISPLAY -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" ${BCLI_IMAGE:-public.ecr.aws/l5h5o6z4/broccoli-cli:latest} > /dev/null
 	echo "bcli-$USER started"
     elif [ "$1" = "down" ]; then
@@ -30,6 +29,8 @@ bcli() {
 	if [[ "$PWD" = "$HOME/"* ]]; then
 		WD="/host${PWD#$HOME}"
 	fi
+	XAUTH_TOKEN="$(xauth list | sed 's/^[^:]*/localhost/g' | sed 's/localhost: /localhost:0 /g')"
+	docker exec -u $(id -u) -e XAUTH_TOKEN="$XAUTH_TOKEN" -it "bcli-$USER" /bin/bash -c "echo \"$XAUTH_TOKEN\" | xargs -n 3 xauth add"
 	docker exec -u $(id -u) -w $WD -e DISPLAY=$DISPLAY -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
