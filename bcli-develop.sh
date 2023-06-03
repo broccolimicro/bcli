@@ -24,8 +24,12 @@ bcli() {
 	    umount $HOME/tech
 	fi
 	rmdir $HOME/tech
-    elif [ "$#" -eq 0 ]; then 
-	docker exec -u $(id -u) -it "bcli-$USER" /bin/bash
+    elif [ "$#" -eq 0 ]; then
+	WD="/host"
+	if [[ "$PWD" = "$HOME/"* ]]; then
+		WD="/host${PWD#$HOME}"
+	fi
+	docker exec -u $(id -u) -w $WD -it "bcli-$USER" /bin/bash
     else
 	if [ "$1" != "--help" ]; then
 	    echo "error: unrecognized command '$1'"
