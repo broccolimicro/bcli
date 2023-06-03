@@ -180,11 +180,19 @@ ENV GROUP_ID "1000"
 ENV MEMBERS ""
 ENV XAUTH_TOKEN ""
 
+RUN echo "version: 1"
 CMD exec /bin/bash -c "echo \"$MEMBERS\" | sed 's/ /\n/g' | xargs -n 2 /usr/sbin/groupadd -g; \
   /usr/sbin/useradd -u $USER_ID -g $USER $USER; \
   echo \"$MEMBERS\" | sed 's/ [0-9]\+ /,/g' | sed 's/[0-9]\+ //g' | xargs -I{} /usr/sbin/usermod -aG {} $USER; \
   cp -r /template /home/$USER; \
   xauth -f /home/$USER/.Xauthority add $XAUTH_TOKEN; \
   chown -R $USER:$USER /home/$USER; \
-  /usr/sbin/usermod -p \$(openssl passwd -1 'bcli') $USER; \ 
+  echo \"$USER ALL=NOPASSWD: /usr/bin/apt-get install *\" > /etc/sudoers.d/apt-get; \
+  echo \"$USER ALL=NOPASSWD: /usr/bin/apt install *\" > /etc/sudoers.d/apt; \
   trap : TERM INT; sleep infinity & wait"
+
+# In case we need to add a password for sudo.
+# However, its possible for someone to break out of the docker container and
+# have root access on the host if they are given sudo access in the container.
+# So, we really shouldn't give them sudo access
+# /usr/sbin/usermod -p \$(openssl passwd -1 'bcli') $USER; \ 

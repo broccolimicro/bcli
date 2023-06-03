@@ -126,3 +126,19 @@ if ! shopt -oq posix; then
   fi
 fi
 
+echo "Welcome to Broccoli's Command Line Interface"
+echo ""
+echo "The following tools are available:"
+echo "go       - architectural and behavioral simulation"
+echo "haystack - formal synthesis of self-timed circuits"
+echo "act      - circuit design and digital simulation"
+echo "prspice  - configure digital/analog circuit co-simulation"
+echo "Xyce     - analog circuit simulation"
+echo "gaw      - analog waveform viewer"
+echo "magic    - circuit layout"
+echo ""
+echo "Semiconductor PDKs are in /opt/cad/conf"
+echo "Packages may be installed with 'sudo apt install <package>'"
+echo "Other usages of sudo are disabled"
+echo ""
+echo ""
