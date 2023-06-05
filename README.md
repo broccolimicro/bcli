@@ -1,17 +1,17 @@
 # Broccoli Development Environment
 
-The following tools are available:
-go       - architectural and behavioral simulation
-haystack - formal synthesis of self-timed circuits
-act      - circuit design and digital simulation
-prspice  - configure digital/analog circuit co-simulation
-Xyce     - analog circuit simulation
-gaw      - analog waveform viewer
-magic    - circuit layout
+The following tools are available:<br>
+go       - architectural and behavioral simulation<br>
+haystack - formal synthesis of self-timed circuits<br>
+act      - circuit design and digital simulation<br>
+prspice  - configure digital/analog circuit co-simulation<br>
+Xyce     - analog circuit simulation<br>
+gaw      - analog waveform viewer<br>
+magic    - circuit layout<br>
 
-Semiconductor PDKs are in /opt/cad/conf
-Packages may be installed with 'sudo apt install <package>'
-Other usages of sudo are disabled
+Semiconductor PDKs are in /opt/cad/conf<br>
+Packages may be installed with 'sudo apt install <package>'<br>
+Other usages of sudo are disabled<br>
 
 ## Setup
 
