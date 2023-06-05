@@ -57,6 +57,11 @@ bcli down
 
 ## Troubleshooting
 
+There are multiple versions of docker, the one that seems to work best for this is `docker.io`. `docker-ce` seems to have trouble writing files in the container.
+```
+sudo apt install docker.io
+```
+
 If graphical tools (such as magic and gaw) fail to launch, you may need to install ```xhost``` on your local machine, and grant docker permission to access your X server.
 ```
 xhost +local:docker
