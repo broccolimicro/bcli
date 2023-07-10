@@ -1,6 +1,7 @@
 # syntax = docker/dockerfile:1.0-experimental
 
 FROM ubuntu:latest
+SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update
 
@@ -71,7 +72,7 @@ RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
 # install gaw
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
 WORKDIR /toolsrc
-RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/waveview.git
+RUN git clone https://git.broccolimicro.io/Broccoli/waveview.git
 WORKDIR waveview
 RUN ./configure
 RUN make
@@ -129,16 +130,26 @@ RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py 
 
 # install Haystack
 WORKDIR /toolsrc
-RUN git clone https://github.com/nbingham1/haystack.git --branch v0.0.0
+RUN git clone https://github.com/nbingham1/haystack.git --branch v0.1.0
 WORKDIR haystack
 RUN git submodule update --init --recursive
 WORKDIR lib
 RUN make
 WORKDIR ../bin
 RUN make
-RUN cp hseplot/plot /opt/cad/bin
 RUN cp hsesim/hsesim /opt/cad/bin
 RUN cp hseenc/hseenc /opt/cad/bin
+RUN cp hseplot/plot /opt/cad/bin
+RUN cp bubble/bubble /opt/cad/bin
+RUN cp prsim/prsim /opt/cad/bin/prsimh # don't overwrite act's prsim
+RUN cp gated/gated /opt/cad/bin
+RUN cp prsize/prsize /opt/cad/bin
+WORKDIR ../old/chp2hse
+RUN make
+RUN cp chp2hse /opt/cad/bin
+WORKDIR ../hse2prs
+RUN MAKE
+RUN cp hse2prs /opt/cad/bin
 
 # install prspice
 WORKDIR /toolsrc
