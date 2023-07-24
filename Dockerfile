@@ -121,7 +121,7 @@ RUN make CXX=mpic++ CC=mpicc install
 # install ACT-06
 RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
 WORKDIR /toolsrc
-RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/act-06.git --branch v1.0.1
 WORKDIR act-06/prsim
 RUN ./grab_xyce.sh /toolsrc/Xyce/build
 WORKDIR ..
@@ -129,8 +129,9 @@ RUN XYCE_INSTALL="/opt/cad" ENABLE_MPI=1 make
 RUN cp prsim/prsim chan.py measure.py sim2vcd.py tlint/tlint spi2act/spi2act.py v2act/v2act /opt/cad/bin
 
 # install Haystack
+RUN echo "building haystack"
 WORKDIR /toolsrc
-RUN git clone https://github.com/nbingham1/haystack.git --branch v0.1.0
+RUN git clone https://github.com/nbingham1/haystack.git --branch v0.1.1
 WORKDIR haystack
 RUN git submodule update --init --recursive
 WORKDIR lib
@@ -143,12 +144,12 @@ RUN cp hseplot/plot /opt/cad/bin
 RUN cp bubble/bubble /opt/cad/bin
 RUN cp prsim/prsim /opt/cad/bin/prsimh # don't overwrite act's prsim
 RUN cp gated/gated /opt/cad/bin
-RUN cp prsize/prsize /opt/cad/bin
+RUN cp prsize/size /opt/cad/bin
 WORKDIR ../old/chp2hse
 RUN make
 RUN cp chp2hse /opt/cad/bin
 WORKDIR ../hse2prs
-RUN MAKE
+RUN make
 RUN cp hse2prs /opt/cad/bin
 
 # install prspice
