@@ -172,7 +172,8 @@ RUN apt-get -y install sudo
 # install editors
 WORKDIR "/"
 ADD home template
-RUN apt-get install -y vim
+RUN apt-get update
+RUN apt-get install --fix-missing -y vim
 RUN mkdir -p /template/.vim/pack/plugins/start
 RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
 RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
