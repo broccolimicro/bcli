@@ -164,7 +164,7 @@ RUN cp prdbase prspice /opt/cad/bin
 
 # install pr
 WORKDIR /toolsrc
-RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git --branch v0.0.0
+RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git --branch v0.0.1
 RUN cp -r pr/pr /opt/cad/bin
 
 RUN apt-get -y install sudo
