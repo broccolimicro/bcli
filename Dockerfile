@@ -181,8 +181,8 @@ RUN mkdir toolsrc
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get -y install wget make gcc g++ gfortran make cmake autoconf automake git libhwloc15 libopenmpi-dev openmpi-bin openmpi-common python3 pip bison libgtk-3-dev libcanberra-gtk3-module gtkwave tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev libedit-dev zlib1g-dev m4 git gcc g++ make libboost-all-dev graphviz sudo vim flex libfl-dev libfftw3-dev libsuitesparse-dev libblas-dev liblapack-dev libtool; apt-get update --fix-missing
 
 WORKDIR /toolsrc
-COPY --from=0 /toolsrc/OpenROAD-flow-scripts/etc /toolsrc/etc
-COPY --from=0 /toolsrc/OpenROAD-flow-scripts/tools /toolsrc/tools
+COPY --from=0 /toolsrc/OpenROAD-flow-scripts/etc/DependencyInstaller.sh /toolsrc/etc/DependencyInstaller.sh
+COPY --from=0 /toolsrc/OpenROAD-flow-scripts/tools/OpenROAD/etc/DependencyInstaller.sh /toolsrc/tools/OpenROAD/etc/DependencyInstaller.sh
 RUN ./etc/DependencyInstaller.sh -base
 RUN ./tools/OpenROAD/etc/DependencyInstaller.sh -base
 
