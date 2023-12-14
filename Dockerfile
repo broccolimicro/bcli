@@ -137,13 +137,15 @@ WORKDIR /toolsrc
 RUN apt-get -y install wget
 RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
 RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
+RUN GOPATH=/opt/go /opt/go/bin/go install golang.org/x/tools/gopls@latest
+RUN GOPATH=/opt/go /opt/go/bin/go install golang.org/x/lint/golint@latest
 
 # install gaw
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
 WORKDIR /toolsrc
 RUN git clone https://git.broccolimicro.io/Broccoli/waveview.git
 WORKDIR waveview
-RUN ./configure
+RUN ./configure --prefix=/opt/cad
 RUN make
 RUN make install
 
@@ -171,15 +173,19 @@ RUN ./configure --prefix=/opt/magic
 RUN make
 RUN make install
 
-# Clean up source code folder
-# RUN rm -rf /toolsrc
-
 # Stage 2: Copy everything over to final image
 FROM ubuntu:latest
 SHELL ["/bin/bash", "-c"]
 
 RUN mkdir toolsrc
 RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get -y install wget make gcc g++ gfortran make cmake autoconf automake git libhwloc15 libopenmpi-dev openmpi-bin openmpi-common python3 pip bison libgtk-3-dev libcanberra-gtk3-module gtkwave tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev libedit-dev zlib1g-dev m4 git gcc g++ make libboost-all-dev graphviz sudo vim flex libfl-dev libfftw3-dev libsuitesparse-dev libblas-dev liblapack-dev libtool; apt-get update --fix-missing
+
+WORKDIR /toolsrc
+COPY --from=0 /toolsrc/OpenROAD-flow-scripts/etc /toolsrc/etc
+COPY --from=0 /toolsrc/OpenROAD-flow-scripts/tools /toolsrc/tools
+RUN ./etc/DependencyInstaller.sh -base
+RUN ./tools/OpenROAD/etc/DependencyInstaller.sh -base
+
 COPY --from=0 /opt/* /opt
 
 WORKDIR /toolsrc
@@ -190,16 +196,17 @@ RUN ./configure
 RUN make
 RUN make install
 
+# Clean up source code folder
+RUN rm -rf /toolsrc
+
 # install editors
 WORKDIR "/"
-RUN apt-get update
-RUN apt-get install --fix-missing -y vim
 ADD home template
 RUN mkdir -p /template/.vim/pack/plugins/start
 RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
 RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
 RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
-RUN vim +GoInstallBinaries +qall
+#RUN vim +GoInstallBinaries +qall
 
 # Connect user home directory of host machine
 RUN mkdir "/host"
