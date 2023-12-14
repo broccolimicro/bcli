@@ -90,22 +90,16 @@ RUN ./configure
 RUN make
 RUN make install
 
-# install OpenRoad
-#WORKDIR /toolsrc
-#RUN git clone https://www.github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
-#WORKDIR OpenROAD-flow-scripts
-
 # install ACT
 RUN pwd
 WORKDIR /toolsrc
-RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make
-RUN git clone https://www.github.com/asyncvlsi/act.git
-WORKDIR act
+RUN apt-get install -y libedit-dev zlib1g-dev m4 git gcc g++ make libboost-all-dev
+RUN git clone https://www.github.com/asyncvlsi/actflow.git
+WORKDIR actflow
+RUN git submodule update --init --recursive
 ENV ACT_HOME=/opt/cad
-ENV VLSI_TOOLS_SRC=/toolsrc/act
-RUN ./configure $ACT_HOME CC=mpicc CXX=mpic++
+ENV VLSI_TOOLS_SRC=/toolsrc/actflow
 RUN ./build
-RUN make install
 
 # install actsim
 WORKDIR /toolsrc
@@ -169,19 +163,27 @@ RUN cp pr/pr pr/scripts/* /opt/cad/bin
 
 RUN apt-get -y install sudo
 
+# install OpenRoad
+WORKDIR /toolsrc
+RUN git clone --recursive https://www.github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
+WORKDIR OpenROAD-flow-scripts
+RUN SUDO_USER="root" ./setup.sh
+RUN ./build_openroad.sh --local --install-path /opt/openroad --nice
+RUN mv dependencies /opt/or-tools
+
+# Clean up source code folder
+RUN rm -rf /toolsrc
+
 # install editors
 WORKDIR "/"
-ADD home template
 RUN apt-get update
 RUN apt-get install --fix-missing -y vim
+ADD home template
 RUN mkdir -p /template/.vim/pack/plugins/start
 RUN git clone https://www.github.com/fatih/vim-go.git /template/.vim/pack/plugins/start/vim-go
 RUN git clone https://github.com/tpope/vim-fugitive /template/.vim/pack/plugins/start/fugitive
 RUN git clone https://www.github.com/preservim/nerdtree.git /template/.vim/pack/plugins/start/nerdtree
 RUN vim +GoInstallBinaries +qall
-
-# Clean up source code folder
-#RUN rm -rf /toolsrc
 
 # Connect user home directory of host machine
 RUN mkdir "/host"
