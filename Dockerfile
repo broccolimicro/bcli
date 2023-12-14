@@ -1,5 +1,6 @@
 # syntax = docker/dockerfile:1.0-experimental
 
+# Stage #1: build all executables
 FROM ubuntu:latest
 SHELL ["/bin/bash", "-c"]
 
@@ -63,32 +64,14 @@ RUN cmake --build . -j 16 -t install
 RUN make xycecinterface
 RUN make install
 
-# install go
+# install OpenRoad
 WORKDIR /toolsrc
-RUN apt-get -y install wget
-RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
-RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
-
-# install gaw
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
-WORKDIR /toolsrc
-RUN git clone https://git.broccolimicro.io/Broccoli/waveview.git
-WORKDIR waveview
-RUN ./configure
-RUN make
-RUN make install
-
-# install gtkwave
-RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y gtkwave
-
-# install magic layout tool
-WORKDIR /toolsrc
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev
-RUN git clone https://www.github.com/RTimothyEdwards/magic.git
-WORKDIR magic
-RUN ./configure
-RUN make
-RUN make install
+RUN git clone --recursive https://www.github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
+WORKDIR OpenROAD-flow-scripts
+RUN apt-get -y install sudo
+RUN SUDO_USER="root" ./setup.sh
+RUN ./build_openroad.sh --local --install-path /opt/openroad --nice
+RUN mv dependencies /opt/or-tools
 
 # install ACT
 RUN pwd
@@ -149,6 +132,24 @@ WORKDIR ../hse2prs
 RUN make
 RUN cp hse2prs /opt/cad/bin
 
+# install go
+WORKDIR /toolsrc
+RUN apt-get -y install wget
+RUN /usr/bin/wget https://go.dev/dl/go1.19.1.linux-amd64.tar.gz
+RUN tar -C /opt -xzf go1.19.1.linux-amd64.tar.gz
+
+# install gaw
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y libgtk-3-dev libcanberra-gtk3-module
+WORKDIR /toolsrc
+RUN git clone https://git.broccolimicro.io/Broccoli/waveview.git
+WORKDIR waveview
+RUN ./configure
+RUN make
+RUN make install
+
+# install gtkwave
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get install -y gtkwave
+
 # install prspice
 WORKDIR /toolsrc
 RUN git clone https://github.com/nbingham1/prspice.git --branch v0.0.1
@@ -161,18 +162,33 @@ WORKDIR /toolsrc
 RUN --mount=type=secret,id=user --mount=type=secret,id=token git clone https://$(cat /run/secrets/user):$(cat /run/secrets/token)@git.broccolimicro.io/Broccoli/pr.git --branch v0.0.3
 RUN cp pr/pr pr/scripts/* /opt/cad/bin
 
-RUN apt-get -y install sudo
-
-# install OpenRoad
+# install magic layout tool
 WORKDIR /toolsrc
-RUN git clone --recursive https://www.github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
-WORKDIR OpenROAD-flow-scripts
-RUN SUDO_USER="root" ./setup.sh
-RUN ./build_openroad.sh --local --install-path /opt/openroad --nice
-RUN mv dependencies /opt/or-tools
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev
+RUN git clone https://www.github.com/RTimothyEdwards/magic.git
+WORKDIR magic
+RUN ./configure --prefix=/opt/magic
+RUN make
+RUN make install
 
 # Clean up source code folder
-RUN rm -rf /toolsrc
+# RUN rm -rf /toolsrc
+
+# Stage 2: Copy everything over to final image
+FROM ubuntu:latest
+SHELL ["/bin/bash", "-c"]
+
+RUN mkdir toolsrc
+RUN apt-get update --fix-missing; DEBIAN_FRONTEND=noninteractive apt-get -y install wget make gcc g++ gfortran make cmake autoconf automake git libhwloc15 libopenmpi-dev openmpi-bin openmpi-common python3 pip bison libgtk-3-dev libcanberra-gtk3-module gtkwave tcsh m4 csh libx11-dev tcl-dev tk-dev libcairo2-dev mesa-common-dev libglu1-mesa-dev libncurses-dev libedit-dev zlib1g-dev m4 git gcc g++ make libboost-all-dev graphviz sudo vim flex libfl-dev libfftw3-dev libsuitesparse-dev libblas-dev liblapack-dev libtool; apt-get update --fix-missing
+COPY --from=0 /opt/* /opt
+
+WORKDIR /toolsrc
+RUN wget https://download.open-mpi.org/release/hwloc/v2.8/hwloc-2.8.0.tar.gz
+RUN tar -xzvf hwloc-2.8.0.tar.gz
+WORKDIR hwloc-2.8.0
+RUN ./configure
+RUN make
+RUN make install
 
 # install editors
 WORKDIR "/"
